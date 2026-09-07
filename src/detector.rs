@@ -1,5 +1,4 @@
 use crate::wfdb::{record_212_decode, parse_annotations};
-use std::collections::VecDeque;
 
 pub fn distance_qrs(channel: &Vec<i16>) -> Vec<u32> {
     let mut sq_distance: Vec<u32> = Vec::new();

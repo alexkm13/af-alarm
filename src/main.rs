@@ -1,6 +1,7 @@
 mod wfdb;
 mod rr;
 mod detector;
+mod spsc;
 
 use std::collections::HashMap;
 
@@ -20,9 +21,24 @@ fn test_record(record: &str) {
     // Run detector
     let detected = detector::detector(&dat_path);
 
+    // Create RR intervals from detected beats (in ms, assuming 360Hz)
+    let sample_rate = 360.0;
+    let rr_intervals: Vec<f64> = detected.windows(2)
+        .map(|w| (w[1] - w[0]) as f64 * 1000.0 / sample_rate)
+        .collect();
+
     println!("Record {}", record);
     println!("Reference beats: {}", ref_samples.len());
     println!("Detected beats: {}", detected.len());
+    println!("RR intervals: {}", rr_intervals.len());
+
+    // Basic RR stats
+    if !rr_intervals.is_empty() {
+        let mean_rr: f64 = rr_intervals.iter().sum::<f64>() / rr_intervals.len() as f64;
+        let min_rr = rr_intervals.iter().cloned().fold(f64::INFINITY, f64::min);
+        let max_rr = rr_intervals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        println!("RR mean: {:.1}ms, min: {:.1}ms, max: {:.1}ms", mean_rr, min_rr, max_rr);
+    }
 
     // Match with ±54 sample tolerance (±150ms at 360Hz)
     let tolerance: u32 = 54;

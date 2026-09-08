@@ -7,8 +7,8 @@ pub mod queue {
         pub push_count: AtomicU32,
         pub q: Vec<UnsafeCell<Option<u32>>>,
     }
-    
-    unsafe impl Sync for BoundQueue {}
+
+     unsafe impl Sync for BoundQueue {}
 
     impl BoundQueue {
         pub fn push(&self, beat: u32) -> Result<(), u32> {

@@ -15,8 +15,6 @@ const AFIB_RECORDS: &[&str] = &["201", "202", "203", "210", "217", "219", "221",
 const SAMPLE_RATE: f64 = 360.0;
 
 fn main() {
-    println!("========== MULTI-RECORD AF ALARM EVALUATION ==========\n");
-
     // Aggregate data across all records
     let mut all_naive_results: Vec<SweepPoint> = Vec::new();
     let mut all_cusum_results: Vec<SweepPoint> = Vec::new();

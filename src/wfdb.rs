@@ -205,7 +205,7 @@ pub fn parse_annotations(file_name: &str) -> (Vec<Beat>, Vec<(String, u32)>) {
     let mut channel: u32 = 0;
     let mut pending_state_change: Option<u32> = None; 
     let mut state_changes: Vec<(String, u32)> = Vec::new(); 
-    
+
     while i < atr.len() {
         let bytes: [u8; 2] = [atr[i], atr[i + 1]];
  

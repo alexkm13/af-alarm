@@ -2,6 +2,7 @@ mod wfdb;
 mod rr;
 mod detector;
 mod spsc;
+mod af;
 
 use std::sync::Arc;
 use std::thread;
@@ -10,6 +11,7 @@ use spsc::queue::BoundQueue;
 use detector::detector;
 use std::sync::OnceLock;
 use std::sync::atomic::{Ordering, AtomicBool};
+use rr::RRProcessor;
 
 fn main() {
     // create queue
@@ -17,9 +19,10 @@ fn main() {
     // wire beats through
     // producer thread
     let b_queue = Arc::new(BoundQueue::new(30));
-    let mut complete_flag: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+    let complete_flag: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
     let producer_handle = Arc::new(OnceLock::<Thread>::new());
     let consumer_handle = Arc::new(OnceLock::<Thread>::new());
+
 
     let prod_flag = Arc::clone(&complete_flag);
 
@@ -34,7 +37,6 @@ fn main() {
             .expect("producer handle already set");
 
         let beats = detector("data/mit-bih-arrhythmia-database-1.0.0/108.dat");
-        let i: usize = 0;
 
         for mut beat in beats {
             loop {
@@ -65,8 +67,7 @@ fn main() {
             .set(thread::current())
             .expect("consumer handle already set");
 
-        let mut prev_beat: Option<u32> = None;
-        let mut rr_list: Vec<(f64, u32)> = Vec::new();
+        let mut process: RRProcessor = RRProcessor::new();
         
         'consumer_loop: loop {
             loop {
@@ -76,14 +77,8 @@ fn main() {
                            thread.unpark();
                        }
 
-                       if let None = prev_beat {
-                           prev_beat = Some(beat);
-                           break;
-                       }
-
-                        rr_list.push((beat as f64 - prev_beat.unwrap() as f64, beat as u32));
-                        prev_beat = Some(beat);
-                        break;
+                       process.stream_beat(beat);
+                       break;
                    },
                    Err(()) => {
                         if cons_flag.load(Ordering::Acquire) == true && cons_queue.push_count.load(Ordering::Relaxed) == cons_queue.pop_count.load(Ordering::Relaxed) {
@@ -96,9 +91,21 @@ fn main() {
                 }
             }
         }
+        process
     });
 
+    producer.join().expect("producer panicked");
+    let processor = consumer.join().expect("consumer panicked");
 
+    println!("RR intervals: {}", processor.rr_interval.len());
+    println!("Irregularity signals: {}", processor.irregularity.len());
+
+    println!("\n=== Naive Detector (threshold={}) ===", processor.naive.threshold);
+    println!("Alarms: {}", processor.naive.alarms.len());
+
+    println!("\n=== CUSUM Detector (k={}, h={}) ===", processor.cusum.k, processor.cusum.h);
+    println!("Alarms: {}", processor.cusum.alarms.len());
+    println!("Final S_t: {:.2}", processor.cusum.s_t);
 }
  
 

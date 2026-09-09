@@ -1,29 +1,46 @@
-use crate::wfdb::{parse_annotations, Beat};
-
-pub fn create_rr_list(file_name: &str, fs: u32) -> Vec<(f32, u32)> {
-   let (beats, _states) = parse_annotations(file_name);
-   let mut differences: Vec<(u32, u32)> = Vec::new();
-
-   for i in 1..beats.len() {
-       let diff = beats[i].sample - beats[i - 1].sample;
-       let quotient = (diff / fs) as f32;
-       differences.push((quotient, beats[i].sample));
-   }
-
-   differences
-}
+use crate::af::{NaiveDetector, CusumDetector};
 
 pub struct RRProcessor {
-    prev_beat: Option<u32>,
-    rr_interval: Vec<(u32, u32)>,
+    pub prev_beat: Option<u32>,
+    pub prev_rr: Option<u32>,
+    pub rr_interval: Vec<(u32, u32)>,
+    pub irregularity: Vec<(f64, u32)>,  // (z_t, beat_sample)
+
+    // Detectors
+    pub naive: NaiveDetector,
+    pub cusum: CusumDetector,
 }
 
 impl RRProcessor {
     pub fn stream_beat(&mut self, beat: u32) -> () {
         if let Some(b) = self.prev_beat {
-            self.rr_interval.push((beat - b, beat));
+            let rr = beat - b;
+            self.rr_interval.push((rr, beat));
+
+            // Compute irregularity z_t = |RR_t - RR_{t-1}| / RR_t
+            // Normalized by current RR to be scale-invariant
+            if let Some(prev_rr) = self.prev_rr {
+                let z_t = (rr as f64 - prev_rr as f64).abs() / rr as f64;
+                self.irregularity.push((z_t, beat));
+
+                // Feed detectors
+                self.naive.update(z_t, beat);
+                self.cusum.update(z_t, beat);
+            }
+            self.prev_rr = Some(rr);
         }
         self.prev_beat = Some(beat);
+    }
+
+    pub fn new() -> Self {
+        RRProcessor {
+            prev_beat: None,
+            prev_rr: None,
+            rr_interval: Vec::new(),
+            irregularity: Vec::new(),
+            naive: NaiveDetector::new(0.3),      // threshold
+            cusum: CusumDetector::new(0.1, 2.0), // k, h
+        }
     }
 }
 

@@ -107,12 +107,42 @@ cargo run --release
 
 ## Results
 
-| Input           | Detector  | FAR / hr | Detection delay | Miss rate |
-| --------------- | --------- | -------: | --------------: | --------: |
-| Reference beats | Threshold |     TODO |            TODO |      TODO |
-| Reference beats | CUSUM     |     TODO |            TODO |      TODO |
-| Detected beats  | Threshold |     TODO |            TODO |      TODO |
-| Detected beats  | CUSUM     |     TODO |            TODO |      TODO |
+Evaluated on MIT-BIH record 201, which contains 3 AF episodes (378s, 37s, 191s).
+
+### Default Parameters
+
+| Input           | Detector           | FAR / hr | Detection delay | Miss rate |
+| --------------- | ------------------ | -------: | --------------: | --------: |
+| Reference beats | Naive (thresh=0.3) |    528.4 |            3.5s |        0% |
+| Reference beats | CUSUM (k=0.1,h=2)  |      0.0 |           15.6s |       67% |
+| Detected beats  | Naive (thresh=0.3) |    606.4 |            2.6s |        0% |
+| Detected beats  | CUSUM (k=0.1,h=2)  |      0.0 |           15.6s |       67% |
+
+### Pareto Frontier (Reference Path)
+
+**Naive Detector:**
+
+| Threshold | Sensitivity | FAR / hr | Delay |
+| --------: | ----------: | -------: | ----: |
+|      0.90 |       100%  |    261.2 | 38.5s |
+|      0.80 |       100%  |    273.2 | 16.6s |
+|      0.70 |       100%  |    279.2 | 12.8s |
+|      0.60 |       100%  |    282.2 |  5.0s |
+|      0.10 |       100%  |    396.3 |  1.9s |
+
+**CUSUM Detector:**
+
+| k    | h   | Sensitivity | FAR / hr | Delay |
+| ---: | --: | ----------: | -------: | ----: |
+| 0.05 | 0.5 |        33%  |      0.0 |  3.8s |
+
+### Observations
+
+The naive threshold achieves 100% sensitivity across all tested thresholds but with high false-alarm rates (261-579/hr). CUSUM with current parameters achieves zero false alarms but only detects 1/3 episodes (33% sensitivity).
+
+At matched FAR comparison is not directly possible since CUSUM operates at FAR=0 while naive operates at FAR>260/hr. The detectors occupy different regions of the sensitivity/FAR tradeoff space.
+
+Detected-beat path shows ~15% FAR degradation vs reference path for naive detector (606 vs 528/hr), indicating upstream beat-detection errors contribute additional irregularity.
 
 ## Limitations
 

@@ -140,8 +140,6 @@ The current study is limited by:
 * evaluation on MIT-BIH datasets rather than prospective clinical monitoring
 * lack of ECG morphology information in the AF decision rule
 
-Detailed engineering decisions and failures are documented in [`POSTMORTEM.md`](POSTMORTEM.md).
-
 ## Acknowledgments
 
 Thanks to **[Dan Vu](https://www.linkedin.com/in/dan-vu-b9254b248)** for the biomedical engineering work that informed the clinical framing, AF episode semantics, confounder analysis, and interpretation of the false-alarm / detection-delay tradeoff.

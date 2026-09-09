@@ -144,7 +144,7 @@ Detailed engineering decisions and failures are documented in [`POSTMORTEM.md`](
 
 ## Acknowledgments
 
-Thanks to **[Dan Vu](https://www.linkedin.com/in/dan-vu-b9254b248&ved=2ahUKEwjX54_EpOCWAxVvmYkEHVQHGNAQFnoECBAQAQ&usg=AOvVaw1Ssxz6AKfma8CKcBtCtRNY)** for the biomedical engineering work that informed the clinical framing, AF episode semantics, confounder analysis, and interpretation of the false-alarm / detection-delay tradeoff.
+Thanks to **[Dan Vu](https://www.linkedin.com/in/dan-vu-b9254b248)** for the biomedical engineering work that informed the clinical framing, AF episode semantics, confounder analysis, and interpretation of the false-alarm / detection-delay tradeoff.
 
 ## License
 
